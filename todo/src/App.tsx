@@ -1,10 +1,13 @@
 import React from 'react';
 import logo from './logo.svg';
+import { RecoilRoot } from 'recoil';
 
 function App() {
   return (
-    <div className="App">
-    </div>
+    <RecoilRoot>
+      <div className="App">
+      </div>
+    </RecoilRoot>
   );
 }
 
