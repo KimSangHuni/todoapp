@@ -1,14 +1,15 @@
 import React from 'react';
-import logo from './logo.svg';
 import { RecoilRoot } from 'recoil';
+import Home from 'pages/Home';
 
 function App() {
   return (
     <RecoilRoot>
-      <div className="App">
-      </div>
+      <Home />
     </RecoilRoot>
   );
 }
+
+
 
 export default App;
