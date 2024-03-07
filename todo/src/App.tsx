@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { RecoilRoot } from 'recoil';
 import Home from 'pages/Home';
+import ErrorBoundary from 'components/ErrorBoundary';
 
 function App() {
   return (
     <RecoilRoot>
-      <Home />
+      <ErrorBoundary>
+        <Suspense fallback={<>loading...</>}>
+          <Home />
+        </Suspense>
+      </ErrorBoundary>
     </RecoilRoot>
   );
 }
