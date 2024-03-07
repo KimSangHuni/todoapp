@@ -4,14 +4,13 @@ import { TodoBase } from 'types/todo'
 import { BoxFlex } from './container/container'
 import { getDateString } from 'utils/date'
 import { Typography } from './typography/typography'
-import { Controller, SubmitHandler, useForm } from 'react-hook-form'
+import { SubmitHandler, useForm } from 'react-hook-form'
 import {
     FiEdit2,
     FiChevronUp,
     FiStar
 } from "react-icons/fi";
-
-
+import { updateTodoFetch } from 'services/fetch'
 
 function Todo({
     _id,
@@ -25,8 +24,8 @@ function Todo({
     const {
         register,
         handleSubmit,
-        setValue,
         getValues,
+        setValue,
         reset,
         formState: { errors }
     } = useForm<TodoBase>({
@@ -35,11 +34,11 @@ function Todo({
             title,
             description,
             createAt,
-            deadline: "2024-04-30",
+            deadline
         }
     });
 
-    const [isFavorite, setIsFavorite] = useState<boolean>(favorite);
+    const [param, setParam] = useState<TodoBase>({ _id, title, description, createAt, deadline, favorite });
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const [mode, setMode] = useState<"read" | "write">("read");
     const isReadMode = mode === "read";
@@ -48,8 +47,12 @@ function Todo({
         setIsOpen(prev => !prev);
     }
 
-    const starToggleHandler = () => {
-        setIsFavorite(prev => !prev);
+    const starToggleHandler = async () => {
+        const context: TodoBase = { ...getValues(), favorite: !param.favorite };
+        const response = await updateTodoFetch(context);
+
+        console.log(response);
+        setParam(prev => ({...prev, favorite: !prev.favorite }));
     }
 
     const modeChangeHandler = () => {
@@ -57,8 +60,11 @@ function Todo({
         if (!isOpen) openToggleHandler();
     }
 
-    const onSubmitHandler: SubmitHandler<TodoBase> = (data) => {
-        alert(data.title);
+    const onSubmitHandler: SubmitHandler<TodoBase> = async (data) => {
+        const response = await updateTodoFetch(data);
+        setParam(data);
+        setMode("read");
+        reset(data);
     }
 
     const onCancelHandler = () => {
@@ -71,11 +77,11 @@ function Todo({
             <TodoMain>
                 <div>
                     <button type='button' onClick={starToggleHandler}>
-                        <FiStar fill={isFavorite ? "#FFCD1C" : "#fff"} color={isFavorite ? "#FFCD1C" : "#aaa"} size={16} />
+                        <FiStar fill={param.favorite ? "#FFCD1C" : "#fff"} color={param.favorite ? "#FFCD1C" : "#aaa"} size={16} />
                     </button>
                     {
                         isReadMode
-                            ? <Typography>{title}</Typography>
+                            ? <Typography>{param.title}</Typography>
                             : <TodoInput
                                 placeholder='할 일을 적어주세요'
                                 {...register("title", {
@@ -88,7 +94,7 @@ function Todo({
                 <div>
                     {
                         isReadMode
-                            ? <Typography>{getDateString(deadline)}</Typography>
+                            ? <Typography>{getDateString(param.deadline)}</Typography>
                             : <TodoInput
                                 type='date'
                                 {...register("deadline", {
@@ -108,14 +114,14 @@ function Todo({
                 <div>
                     {
                         isReadMode
-                            ? <Typography>{description ?? "no data"}</Typography>
+                            ? <Typography>{param.description ?? "no data"}</Typography>
                             : <TodoInput
                                 placeholder='자세한 내용을 적어주세요.'
                                 {...register("description")}
                             />
                     }
                     <BoxFlex className='submit-box'>
-                        <Typography size='sm'>작성일: {getDateString(createAt)}</Typography>
+                        <Typography size='sm'>작성일: {getDateString(param.createAt)}</Typography>
                         {
                             !isReadMode && <span>
                                 <button className='submit' type="submit">수정</button>
