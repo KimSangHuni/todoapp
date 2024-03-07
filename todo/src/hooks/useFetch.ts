@@ -1,7 +1,7 @@
 import useSWR, { BareFetcher } from 'swr';
 
-export function useNotionFetch(key:string, fetcher: BareFetcher<any>) {
-    const { data, error, isLoading } = useSWR(key, fetcher, { suspense: true });
+export function useFetch(key:string, fetcher: BareFetcher<any>) {
+    const { data, error, isLoading } = useSWR(key, fetcher);
 
     return { data, error, isLoading };
 }

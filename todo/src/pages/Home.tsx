@@ -1,13 +1,9 @@
-import { getTodoList } from 'api/notionFetch'
+import React from 'react'
 import Todo from 'components/Todo'
 import Container, { Wrapper } from 'components/container/container'
-import { useNotionFetch } from 'hooks/useFetch'
-import React from 'react'
 import { TodoBase } from 'types/todo'
 
 function Home() {
-    const { data } = useNotionFetch('todos', getTodoList);
-    console.log(data);
 
     const testData:TodoBase = {
         idx: 1,
