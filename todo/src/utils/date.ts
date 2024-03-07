@@ -1,7 +1,10 @@
-export function getDateString(date:Date) {
-    const y = date.getFullYear();
-    const m = date.getMonth() + 1;
-    const d = date.getDate();
+export function getDateString(date:Date | string) {
+    
+    let target = new Date(date);
 
-    return `${y}.${m}.${d}`;
+    const y = target.getFullYear();
+    const m = target.getMonth() + 1;
+    const d = target.getDate();
+
+    return `${y}년 ${m}월 ${d}일`;
 }
