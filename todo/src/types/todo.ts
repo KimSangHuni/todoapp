@@ -1,8 +1,9 @@
 export interface TodoBase {
-    idx: number;
+    _id: number;
     title: string;
+    createAt: Date | string;
+    deadline: Date | string;
     description?: string;
-    createAt: Date;
-    deadline: Date;
+    favorite: boolean;
 }
 
