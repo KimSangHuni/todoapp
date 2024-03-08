@@ -1,5 +1,5 @@
 export interface TodoBase {
-    _id: number;
+    _id: string;
     title: string;
     createAt: Date | string;
     deadline: Date | string;

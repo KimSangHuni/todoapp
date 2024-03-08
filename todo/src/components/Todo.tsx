@@ -10,7 +10,14 @@ import {
     FiChevronUp,
     FiStar
 } from "react-icons/fi";
-import { updateTodoFetch } from 'services/fetch'
+import { deleteTodoFetch, insertTodoFetch, updateTodoFetch } from 'services/fetch'
+import { useRecoilState } from 'recoil'
+import { todoState } from 'recoil/todo/atoms'
+import { color } from 'styles/color'
+
+interface TodoProps extends TodoBase {
+    insertMode?: boolean
+}
 
 function Todo({
     _id,
@@ -18,8 +25,9 @@ function Todo({
     description,
     createAt,
     deadline,
-    favorite
-}: TodoBase) {
+    favorite,
+    insertMode = false
+}: TodoProps) {
 
     const {
         register,
@@ -38,21 +46,24 @@ function Todo({
         }
     });
 
+    const [todoList, setTodoList] = useRecoilState(todoState);
     const [param, setParam] = useState<TodoBase>({ _id, title, description, createAt, deadline, favorite });
-    const [isOpen, setIsOpen] = useState<boolean>(false);
-    const [mode, setMode] = useState<"read" | "write">("read");
-    const isReadMode = mode === "read";
+    const [isOpen, setIsOpen] = useState<boolean>(insertMode);
 
-    const openToggleHandler = () => {
-        setIsOpen(prev => !prev);
-    }
+    const [mode, setMode] = useState<"read" | "write">(insertMode ? "write" : "read");
+    const isReadMode: boolean = mode === "read";
 
     const starToggleHandler = async () => {
         const context: TodoBase = { ...getValues(), favorite: !param.favorite };
-        const response = await updateTodoFetch(context);
+        await updateTodoFetch(context);
 
-        console.log(response);
-        setParam(prev => ({...prev, favorite: !prev.favorite }));
+        setParam(prev => ({ ...prev, favorite: !prev.favorite }));
+    }
+
+    const openToggleHandler = () => {
+        if (isReadMode) {
+            setIsOpen(prev => !prev);
+        }
     }
 
     const modeChangeHandler = () => {
@@ -60,11 +71,16 @@ function Todo({
         if (!isOpen) openToggleHandler();
     }
 
-    const onSubmitHandler: SubmitHandler<TodoBase> = async (data) => {
-        const response = await updateTodoFetch(data);
-        setParam(data);
-        setMode("read");
-        reset(data);
+    const insertHandler: SubmitHandler<TodoBase> = async (data) => {
+        await insertTodoFetch(data);
+        setTodoList(prev => [data, ...prev]);
+        reset(param);
+    }
+
+    const deleteHandler = async () => {
+        await deleteTodoFetch(_id);
+        const deleted = todoList.filter(todo => todo._id !== _id);
+        setTodoList(deleted);
     }
 
     const onCancelHandler = () => {
@@ -72,41 +88,53 @@ function Todo({
         reset();
     }
 
+    const onSubmitHandler: SubmitHandler<TodoBase> = async (data) => {
+        await updateTodoFetch(data);
+        setParam(data);
+        setMode("read");
+        reset(data);
+    }
+
     return (
-        <TodoBox onSubmit={handleSubmit(onSubmitHandler)}>
+        <TodoBox onSubmit={handleSubmit(insertMode ? insertHandler : onSubmitHandler)}>
             <TodoMain>
                 <div>
-                    <button type='button' onClick={starToggleHandler}>
-                        <FiStar fill={param.favorite ? "#FFCD1C" : "#fff"} color={param.favorite ? "#FFCD1C" : "#aaa"} size={16} />
-                    </button>
                     {
-                        isReadMode
+                        !insertMode &&
+                        <button type='button' onClick={starToggleHandler}>
+                            <FiStar fill={param.favorite ? color.favorite : "#fff"} color={param.favorite ? color.favorite : color.text} size={16} />
+                        </button>
+                    }
+                    <div>
+                        {
+                            isReadMode
                             ? <Typography>{param.title}</Typography>
-                            : <TodoInput
-                                placeholder='할 일을 적어주세요'
-                                {...register("title", {
-                                    required: "제목은 필수입력입니다.",
-                                })}
-                            />
-                    }
-                    {errors.title && <Typography>{errors.title.message}</Typography>}
+                            : <TodoInput placeholder='할 일을 적어주세요' {...register("title", {
+                                required: "제목은 필수입력입니다.",
+                            })} />
+                        }
+                        {errors.title && <Typography size='sm'>{errors.title.message}</Typography>}
+                    </div>
                 </div>
+
                 <div>
-                    {
-                        isReadMode
-                            ? <Typography>{getDateString(param.deadline)}</Typography>
-                            : <TodoInput
-                                type='date'
-                                {...register("deadline", {
-                                    required: "마감일은 필수입력입니다.",
-                                })}
-                                onChange={(e) => { setValue("deadline", e.target.value) }}
-                            />
+                    <div>
+                        {
+                            isReadMode
+                                ? <Typography>{getDateString(param.deadline)}</Typography>
+                                : <TodoInput
+                                    type='date'
+                                    {...register("deadline", {
+                                        required: "마감일은 필수입력입니다.",
+                                    })}
+                                    onChange={(e) => { setValue("deadline", e.target.value) }}
+                                />
 
 
-                    }
-                    {errors.title && <Typography>{errors.title.message}</Typography>}
-                    <button type='button' onClick={modeChangeHandler}><FiEdit2 size={16} color={'#4E5968'} /></button>
+                        }
+                        {errors.title && <Typography size='sm'>{errors.deadline?.message}</Typography>}
+                    </div>
+                    {!insertMode && isReadMode && <button type='button' onClick={modeChangeHandler}><FiEdit2 size={16} color={'#4E5968'} /></button>}
                     <button type='button' onClick={openToggleHandler} className={`arrow ${isOpen ? "open" : ""}`}><FiChevronUp size={18} color={'#4E5968'} /></button>
                 </div>
             </TodoMain>
@@ -123,9 +151,10 @@ function Todo({
                     <BoxFlex className='submit-box'>
                         <Typography size='sm'>작성일: {getDateString(param.createAt)}</Typography>
                         {
-                            !isReadMode && <span>
-                                <button className='submit' type="submit">수정</button>
-                                <button className='cancel' type="button" onClick={onCancelHandler}>취소</button>
+                            !isReadMode &&
+                            <span>
+                                <button className='submit' type="submit">{insertMode ? "등록" : "수정"}</button>
+                                {!insertMode && <button className='cancel' type="button" onClick={onCancelHandler}>취소</button>}
                             </span>
                         }
                     </BoxFlex>
@@ -156,9 +185,7 @@ const TodoBox = styled.form`
     & .arrow {
         transition: 0.2s;
         transform: rotate(-90deg);
-        &.open {
-            transform: rotate(-180deg);
-        }
+        &.open { transform: rotate(-180deg); }
     }
 `
 
@@ -216,6 +243,7 @@ const TodoDetail = styled.div<{ $isOpen: boolean }>`
             display: flex;
             gap: 6px;
         }
+
         & button {
             border-radius: 8px;
             padding: 4px 8px;
