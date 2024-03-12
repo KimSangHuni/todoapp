@@ -8,7 +8,8 @@ import { SubmitHandler, useForm } from 'react-hook-form'
 import {
     FiEdit2,
     FiChevronUp,
-    FiStar
+    FiStar,
+    FiTrash2
 } from "react-icons/fi";
 import { deleteTodoFetch, insertTodoFetch, updateTodoFetch } from 'services/fetch'
 import { useRecoilState } from 'recoil'
@@ -47,6 +48,7 @@ function Todo({
     });
 
     const [todoList, setTodoList] = useRecoilState(todoState);
+
     const [param, setParam] = useState<TodoBase>({ _id, title, description, createAt, deadline, favorite });
     const [isOpen, setIsOpen] = useState<boolean>(insertMode);
 
@@ -134,8 +136,21 @@ function Todo({
                         }
                         {errors.title && <Typography size='sm'>{errors.deadline?.message}</Typography>}
                     </div>
-                    {!insertMode && isReadMode && <button type='button' onClick={modeChangeHandler}><FiEdit2 size={16} color={'#4E5968'} /></button>}
-                    <button type='button' onClick={openToggleHandler} className={`arrow ${isOpen ? "open" : ""}`}><FiChevronUp size={18} color={'#4E5968'} /></button>
+                    {
+                    !insertMode && isReadMode && 
+                        <button type='button' onClick={modeChangeHandler}>
+                            <FiEdit2 size={16} color={color.text} />
+                        </button>
+                    }
+                    {
+                        !insertMode && !isReadMode && 
+                        <button type='button' onClick={deleteHandler}>
+                            <FiTrash2 size={16} color={color.text} />
+                        </button>
+                    }
+                    <button type='button' onClick={openToggleHandler} className={`arrow ${isOpen ? "open" : ""}`}>
+                        <FiChevronUp size={18} color={color.text} />
+                    </button>
                 </div>
             </TodoMain>
             <TodoDetail $isOpen={isOpen}>
@@ -191,13 +206,7 @@ const TodoBox = styled.form`
 
 const TodoMain = styled(BoxFlex)`
     padding: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    backdrop-filter: blur(15.5px);
-    -webkit-backdrop-filter: blur(15.5px);
-
     justify-content: space-between;
-    border-radius: 16px;
 
     & > div {
         display: flex;

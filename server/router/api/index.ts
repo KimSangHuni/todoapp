@@ -64,5 +64,29 @@ router.put('/todos', async (req, res) => {
     }
 })
 
+router.delete('/todos/:id', async (req, res) => {
+    try {
+        const _id = req.params.id;
+        console.log("delete", _id);
+
+        if (!_id) {
+            new Error("bad request");
+        }
+
+        const collection = db.collection("tasks");
+        const result = await collection.deleteOne({ _id: new ObjectId(_id) });
+
+        if (result.deletedCount > 0) {
+            res.status(200).json({ success: true, message: '데이터가 성공적으로 삭제되었습니다.' });
+        } else {
+            res.status(404).json({ success: false, message: '해당 ID의 데이터를 찾을 수 없습니다.' });
+        }
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500);
+    }
+})
+
 
 export default router;
