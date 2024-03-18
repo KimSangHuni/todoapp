@@ -14,7 +14,7 @@ function Home() {
     const initalTodo: TodoBase = { _id: '', title: '', description: '', deadline: new Date(), createAt: new Date(), favorite: false };
     
     const [todoList, setTodoList] = useRecoilState(todoState);
-    const [filter, setFilter] = useRecoilState(filterState);
+    const [filter] = useRecoilState(filterState);
 
     const { data } = useSWR("api/tasks", () => todoFetch(filter), {
         refreshInterval: 10 * 1000, suspense: true

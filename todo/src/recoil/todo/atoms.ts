@@ -9,6 +9,7 @@ export const todoState = atom<TodoBase[]>({
 
 const filterList: Filter[] = [
   {
+      idx:0,
       text: "중요",
       content: "favorite",
       value: false,
