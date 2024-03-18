@@ -11,9 +11,9 @@ import {
     FiStar,
     FiTrash2
 } from "react-icons/fi";
-import { deleteTodoFetch, insertTodoFetch, updateTodoFetch } from 'services/fetch'
+import { deleteTodoFetch, insertTodoFetch, todoFetch, updateTodoFetch } from 'services/fetch'
 import { useRecoilState } from 'recoil'
-import { todoState } from 'recoil/todo/atoms'
+import { filterState, todoState } from 'recoil/todo/atoms'
 import { color } from 'styles/color'
 
 interface TodoProps extends TodoBase {
@@ -48,6 +48,7 @@ function Todo({
     });
 
     const [todoList, setTodoList] = useRecoilState(todoState);
+    const [filter] = useRecoilState(filterState);
 
     const [param, setParam] = useState<TodoBase>({ _id, title, description, createAt, deadline, favorite });
     const [isOpen, setIsOpen] = useState<boolean>(insertMode);
@@ -58,7 +59,8 @@ function Todo({
     const starToggleHandler = async () => {
         const context: TodoBase = { ...getValues(), favorite: !param.favorite };
         await updateTodoFetch(context);
-
+        const { response } = await todoFetch(filter);
+        setTodoList(response);
         setParam(prev => ({ ...prev, favorite: !prev.favorite }));
     }
 
@@ -110,10 +112,10 @@ function Todo({
                     <div>
                         {
                             isReadMode
-                            ? <Typography>{param.title}</Typography>
-                            : <TodoInput placeholder='할 일을 적어주세요' {...register("title", {
-                                required: "제목은 필수입력입니다.",
-                            })} />
+                                ? <Typography>{param.title}</Typography>
+                                : <TodoInput placeholder='할 일을 적어주세요' {...register("title", {
+                                    required: "제목은 필수입력입니다.",
+                                })} />
                         }
                         {errors.title && <Typography size='sm'>{errors.title.message}</Typography>}
                     </div>
@@ -137,13 +139,13 @@ function Todo({
                         {errors.title && <Typography size='sm'>{errors.deadline?.message}</Typography>}
                     </div>
                     {
-                    !insertMode && isReadMode && 
+                        !insertMode && isReadMode &&
                         <button type='button' onClick={modeChangeHandler}>
                             <FiEdit2 size={16} color={color.text} />
                         </button>
                     }
                     {
-                        !insertMode && !isReadMode && 
+                        !insertMode && !isReadMode &&
                         <button type='button' onClick={deleteHandler}>
                             <FiTrash2 size={16} color={color.text} />
                         </button>

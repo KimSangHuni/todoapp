@@ -4,11 +4,21 @@ import { ObjectId } from "mongodb";
 
 const router = Router();
 
-
 router.get('/todos', async (req, res) => {
     try {
+        const query = req.query;
+        const filter:any = {};
+        
+        for (const key in query) {
+            if (Object.prototype.hasOwnProperty.call(query, key)) {
+                if(JSON.parse(query[key] as string)) {
+                    filter[key] = JSON.parse(query[key] as string);
+                }
+            }
+        }
+
         const collection = db.collection("tasks");
-        const data = await collection.find().toArray();
+        const data = await collection.find({...filter}).toArray();
         res.status(200).json({ response: data });
     }
     catch (e) {

@@ -12,7 +12,7 @@ import FilterComponent, { Filter } from 'components/FilterComponent';
 
 function Home() {
     const initalTodo: TodoBase = { _id: '', title: '', description: '', deadline: new Date(), createAt: new Date(), favorite: false };
-    
+
     const [todoList, setTodoList] = useRecoilState(todoState);
     const [filter] = useRecoilState(filterState);
 
@@ -23,6 +23,15 @@ function Home() {
     useEffect(() => {
         setTodoList(data.response);
     }, [data]);
+
+    useEffect(() => {
+        const todoSearchHandler = async () => {
+            const data = await todoFetch(filter);
+            setTodoList(data.response);
+        }
+
+        todoSearchHandler();
+    }, [filter]);
 
     return (
         <Container>

@@ -26,8 +26,17 @@ const mongodb_1 = require("mongodb");
 const router = (0, express_1.Router)();
 router.get('/todos', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const query = req.query;
+        const filter = {};
+        for (const key in query) {
+            if (Object.prototype.hasOwnProperty.call(query, key)) {
+                if (JSON.parse(query[key])) {
+                    filter[key] = JSON.parse(query[key]);
+                }
+            }
+        }
         const collection = mongo_1.db.collection("tasks");
-        const data = yield collection.find().toArray();
+        const data = yield collection.find(Object.assign({}, filter)).toArray();
         res.status(200).json({ response: data });
     }
     catch (e) {
